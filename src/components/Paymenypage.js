@@ -67,7 +67,7 @@ const PaymentPage = () => {
         razorpay_signature: response.razorpay_signature || "auto_signature",
       };
 
-      const res = await axios.post("http://localhost:8081/api/payments", payload);
+      const res = await axios.post(`http://${process.env.REACT_APP_IP_ADDRESS}/api/payments`, payload);
       console.log("✅ Payment saved:", res.data);
       navigate("/allcourses");
     } catch (error) {
@@ -98,7 +98,7 @@ const PaymentPage = () => {
       prefill: {
         name: "Loki",
         email: "loki@gmail.com",
-        contact: "7093573800",
+        contact: "8374307933",
       },
       theme: {
         color: "#6C2BD9",

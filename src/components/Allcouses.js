@@ -14,7 +14,7 @@ const Allcourses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await axios.get('http://192.168.1.13:8083/api/courses/');
+        const response = await axios.get(`http://${process.env.REACT_APP_IP_ADDRESS}/api/courses/`);
         setCourses(response.data);
         setLoading(false);
       } catch (error) {
