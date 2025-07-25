@@ -1,62 +1,31 @@
-// src/pages/LoginPage.js
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Snackbar } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUser } from '../components/Redux/user/userSlice'; // ✅ Corrected path (only 1 level up)
 
 const LoginPage = () => {
-  const [hovered, setHovered] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [hovered, setHovered] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo && window.location.pathname === '/') {
-      navigate('/home'); // or your default home page
-    }
-  }, [navigate]);
+  const { loading, error } = useSelector((state) => state.user);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-    setOpenSnackbar(false);
-
     if (!email || !password) {
-      setErrorMsg('Please enter email and password.');
       setOpenSnackbar(true);
       return;
     }
 
     try {
-      const res = await fetch(`http://${process.env.REACT_APP_IP_ADDRESS}/api/users/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-      console.log("Response status:", res.status);
-      console.log("Login response data:", data);
-
-      if (res.ok) {
-        localStorage.setItem('userInfo', JSON.stringify(data));
-        setSuccessMsg('Login successful!');
-        setOpenSnackbar(true);
-        console.log("Navigating to Allcouses");
-        navigate('/allcourses'); // ✅ Navigation happens here
-      } else {
-        setErrorMsg(data.message || 'Invalid credentials');
-        setOpenSnackbar(true);
-      }
-    } catch (error) {
-      setErrorMsg('Login failed. Try again later.');
+      await dispatch(fetchUser({ email, password })).unwrap();
+      navigate('/allcourses');
+    } catch (err) {
       setOpenSnackbar(true);
     }
   };
@@ -122,7 +91,7 @@ const LoginPage = () => {
                   className="w-100 fw-bold"
                   style={{ borderRadius: '30px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
                 >
-                  Login
+                  {loading ? 'Logging in...' : 'Login'}
                 </Button>
               </Form>
             </div>
@@ -130,20 +99,19 @@ const LoginPage = () => {
         </Row>
       </Container>
 
-      {/* Snackbar Alert */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
         onClose={() => setOpenSnackbar(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        {errorMsg ? (
+        {error ? (
           <Alert severity="error" onClose={() => setOpenSnackbar(false)}>
-            {errorMsg}
+            {error}
           </Alert>
         ) : (
-          <Alert severity="success" onClose={() => setOpenSnackbar(false)}>
-            {successMsg}
+          <Alert severity="warning" onClose={() => setOpenSnackbar(false)}>
+            Please fill both fields.
           </Alert>
         )}
       </Snackbar>
