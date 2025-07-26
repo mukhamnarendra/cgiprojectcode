@@ -12,23 +12,27 @@ const PaymentPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const course = location.state?.course;
-
+  console.log("🚀 Course data:", course);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
 
+  // Get user from localStorage
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const user_id = userInfo?.user?.id;
+
   const amount = course?.selling_price || 0;
 
   useEffect(() => {
-    if (!course) {
+    if (!course || !user_id) {
       setSnackbar({
         open: true,
-        message: "❌ No course selected",
+        message: "❌ Missing course or user info",
         severity: "error",
       });
-      navigate("/allcourses"); // redirect if accessed directly
+      navigate("/allcourses");
     } else {
       loadRazorpayScript().then((loaded) => {
         if (loaded) openRazorpay();
@@ -57,19 +61,24 @@ const PaymentPage = () => {
   const sendPaymentToServer = async (response) => {
     try {
       const payload = {
-        user_id: 90001, // dynamically set in real projects
-        amount: amount,
-        payment_status: "Success",
-        payment_method: "Razorpay",
-        transaction_id: "TXN" + new Date().getTime(),
-        razorpay_order_id: response.razorpay_order_id || "auto_order_id",
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature || "auto_signature",
-      };
+  user_id: user_id,
+  amount: Number(amount).toFixed(2),
+  payment_status: "Completed",
+  payment_method: "Razorpay",
+  transaction_id: "TXN" + new Date().getTime(),
+  razorpay_payment_id: response.razorpay_payment_id,
+  razorpay_signature: response.razorpay_signature,
+  course_id: course.id, 
+};
 
       const res = await axios.post(`http://${process.env.REACT_APP_IP_ADDRESS}/api/payments`, payload);
-      console.log("✅ Payment saved:", res.data);
-      navigate("/allcourses");
+      console.log("✅ Payment recorded:", res);
+      setSnackbar({
+        open: true,
+        message: "✅ Payment successful and recorded!",
+        severity: "success",
+      });
+      setTimeout(() => navigate("/allcourses"), 1500);
     } catch (error) {
       console.error("❌ Error saving payment:", error);
       setSnackbar({
@@ -82,12 +91,13 @@ const PaymentPage = () => {
 
   const openRazorpay = () => {
     const options = {
-      key: "rzp_test_GRRNoJBdPElkDv", // Replace with your key
-      amount: amount * 100,
+      key: "rzp_test_GRRNoJBdPElkDv", // Replace with your Razorpay test key
+      amount: amount * 100, // Amount in paise
       currency: "INR",
       name: "My Store",
       description: `Payment for ${course.title}`,
       handler: function (response) {
+        console.log("✅ Razorpay response:", response);
         setSnackbar({
           open: true,
           message: `✅ Payment Successful! ID: ${response.razorpay_payment_id}`,
@@ -96,13 +106,11 @@ const PaymentPage = () => {
         sendPaymentToServer(response);
       },
       prefill: {
-        name: "Loki",
-        email: "loki@gmail.com",
-        contact: "8374307933",
+        name: userInfo?.user?.name,
+        email: userInfo?.user?.email,
+        contact: userInfo?.user?.phone,
       },
-      theme: {
-        color: "#6C2BD9",
-      },
+     
     };
 
     const rzp = new window.Razorpay(options);
@@ -111,7 +119,11 @@ const PaymentPage = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+    if (snackbar.severity === "success") {
+      navigate("/allcourses");
+    }
   };
+
 
   return (
     <div style={{ backgroundColor: "#a889dfff", minHeight: "100vh", paddingTop: "50px" }}>
