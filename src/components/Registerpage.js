@@ -1,9 +1,11 @@
 // src/pages/RegisterPage.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, InputGroup } from 'react-bootstrap';
 import { FaUser, FaEnvelope, FaLock, FaPhone } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { register } from './Redux/user/userAction';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -15,8 +17,17 @@ const RegisterPage = () => {
     domain: '',
   });
 
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { loading, error, userInfo } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    if (userInfo) {
+      alert('Registration successful!');
+      navigate('/loginpage');
+    }
+  }, [userInfo, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,41 +47,11 @@ const RegisterPage = () => {
       email: email.trim(),
       phonenumber: phonenumber.trim(),
       password: password.trim(),
-      confirmpassword: confirmpassword.trim(), // ✅ Correct key for backend
+      confirmpassword: confirmpassword.trim(),
       domain: domain.trim(),
     };
 
-    try {
-      setLoading(true);
-      const res = await fetch(`http://${process.env.REACT_APP_IP_ADDRESS}/api/users/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(trimmedData),
-      });
-
-      const contentType = res.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await res.text();
-        console.error('Expected JSON, got:', text);
-        alert('Server did not return valid data. Check API or network.');
-        return;
-      }
-
-      const data = await res.json();
-      console.log(data);
-
-      if (res.ok) {
-        alert('Registration successful!');
-        navigate('/loginpage');
-      } else {
-        alert(data.message || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      alert('Something went wrong. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
+    dispatch(register(trimmedData));
   };
 
   return (
@@ -107,8 +88,10 @@ const RegisterPage = () => {
             }}
           >
             <h3 className="text-center mb-4 fw-bold">Registration</h3>
+
+            {error && <p className="text-danger text-center mb-3">{error}</p>}
+
             <Form onSubmit={handleRegister}>
-              {/* Name */}
               <InputGroup className="mb-3">
                 <InputGroup.Text className="bg-white border-0">
                   <FaUser color="#a18cd1" />
@@ -124,7 +107,6 @@ const RegisterPage = () => {
                 />
               </InputGroup>
 
-              {/* Email */}
               <InputGroup className="mb-3">
                 <InputGroup.Text className="bg-white border-0">
                   <FaEnvelope color="#a18cd1" />
@@ -140,7 +122,6 @@ const RegisterPage = () => {
                 />
               </InputGroup>
 
-              {/* Phone Number */}
               <InputGroup className="mb-3">
                 <InputGroup.Text className="bg-white border-0">
                   <FaPhone color="#a18cd1" />
@@ -156,7 +137,6 @@ const RegisterPage = () => {
                 />
               </InputGroup>
 
-              {/* Password */}
               <InputGroup className="mb-3">
                 <InputGroup.Text className="bg-white border-0">
                   <FaLock color="#a18cd1" />
@@ -172,7 +152,6 @@ const RegisterPage = () => {
                 />
               </InputGroup>
 
-              {/* Confirm Password */}
               <InputGroup className="mb-3">
                 <InputGroup.Text className="bg-white border-0">
                   <FaLock color="#a18cd1" />
@@ -188,7 +167,6 @@ const RegisterPage = () => {
                 />
               </InputGroup>
 
-              {/* Domain */}
               <InputGroup className="mb-4">
                 <InputGroup.Text className="bg-white border-0">
                   <FaUser color="#a18cd1" />

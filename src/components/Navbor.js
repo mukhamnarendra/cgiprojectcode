@@ -46,7 +46,7 @@ const CustomNavbar = () => {
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto align-items-center">
-            {['HOME', 'ABOUT', 'SERVICES', 'COURSES', 'CONTACT US', 'CERTIFICATES'].map((item, index) => (
+            {['HOME', 'ABOUT', 'SERVICES', 'COURSES', 'CONTACT US'].map((item, index) => (
               <Nav.Link
                 key={index}
                 as={Link}
@@ -60,6 +60,26 @@ const CustomNavbar = () => {
                 {item}
               </Nav.Link>
             ))}
+
+            {/* Show only when logged in */}
+            {isLoggedIn && (
+              <>
+                <Nav.Link
+                  as={Link}
+                  to="/mycourses"
+                  className="mx-2 text-white fw-bold"
+                >
+                  MY COURSES
+                </Nav.Link>
+                <Nav.Link
+                  as={Link}
+                  to="/certificates"
+                  className="mx-2 text-white fw-bold"
+                >
+                  CERTIFICATES
+                </Nav.Link>
+              </>
+            )}
 
             {isLoggedIn ? (
               <Button

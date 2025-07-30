@@ -1,39 +1,52 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+// src/features/course/courseSlice.js
+import { createSlice } from "@reduxjs/toolkit";
 
-// Async thunk to fetch courses
-export const fetchCourses = createAsyncThunk("course/fetchCourses", async (_, thunkAPI) => {
-  try {
-    const response = await axios.get(`http://${process.env.REACT_APP_IP_ADDRESS}/api/courses`);
-    return response.data;
-  } catch (error) {
-    return thunkAPI.rejectWithValue(error.message);
-  }
-});
+const initialState = {
+  courses: [],
+  loading: false,
+  error: null,
+  selectedCourse: null,
+};
 
 const courseSlice = createSlice({
   name: "course",
-  initialState: {
-    courses: [],
-    loading: false,
-    error: null,
-  },
-  reducers: {},
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchCourses.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCourses.fulfilled, (state, action) => {
-        state.loading = false;
-        state.courses = action.payload;
-      })
-      .addCase(fetchCourses.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+  initialState,
+  reducers: {
+    setCourses: (state, action) => {
+      state.courses = action.payload;
+      state.loading = false;
+    },
+    setSelectedCourse: (state, action) => {
+      state.selectedCourse = action.payload;
+    },
+    addCourse: (state, action) => {
+      state.courses.push(action.payload);
+    },
+    updateCourse: (state, action) => {
+      const index = state.courses.findIndex((c) => c.id === action.payload.id);
+      if (index !== -1) state.courses[index] = action.payload;
+    },
+    removeCourse: (state, action) => {
+      state.courses = state.courses.filter((c) => c.id !== action.payload);
+    },
+    setLoading: (state) => {
+      state.loading = true;
+    },
+    setError: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
   },
 });
+
+export const {
+  setCourses,
+  setSelectedCourse,
+  addCourse,
+  updateCourse,
+  removeCourse,
+  setLoading,
+  setError,
+} = courseSlice.actions;
 
 export default courseSlice.reducer;
